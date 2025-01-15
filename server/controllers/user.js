@@ -6,7 +6,7 @@ export const register = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
     if (!fullName || !email || !password) {
-      return res.status(403).json({
+      return res.status(400).json({
         success: false,
         message: "All fields are required",
       });
@@ -14,7 +14,7 @@ export const register = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (user) {
-      return res.status(403).json({
+      return res.status(400).json({
         success: false,
         message: "This email ID is already registered",
       });
@@ -44,14 +44,15 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(403).json({
+      return res.status(400).json({
         success: false,
         message: "All fields are required",
       });
     }
+
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(403).json({
+      return res.status(400).json({
         success: false,
         message: "Incorrect Username or password",
       });
@@ -59,7 +60,7 @@ export const login = async (req, res) => {
 
     const isPasswordMatch = await bcrypt.compare(password, user.password);
     if (!isPasswordMatch) {
-      return res.status(403).json({
+      return res.status(400).json({
         success: false,
         message: "Incorrect Username or password",
       });
@@ -81,18 +82,25 @@ export const login = async (req, res) => {
         message: `Welcome back ${user.fullName}`,
       });
   } catch (error) {
-    console.log(error);
+    console.error("Error logging in user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
-export const logout = async (_,res) => {
+export const logout = async (_, res) => {
   try {
-    return res.status(200).cookie("token","",{maxAge: 0}).json({
-      success:true,
-      message: "User logged out successfully"
+    return res.status(200).cookie("token", "", { maxAge: 0 }).json({
+      success: true,
+      message: "User logged out successfully",
     });
   } catch (error) {
-    console.log(error);
-    
+    console.error("Error logging out user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
-}
+};
